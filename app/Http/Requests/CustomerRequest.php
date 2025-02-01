@@ -24,8 +24,8 @@ class CustomerRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'document_id' => 'required|in:DNI,RUC',
-            'number_id' => 'required|string|max:255|unique:customers',
-            'email' => 'required|string|email|max:255|unique:customers',
+            'number_id' => 'required|string|max:255|unique:customers,number_id,' . $this->customer->id,
+            'email' => 'required|string|email|max:255|unique:customers,email,' . $this->customer->id,
             'phone' => 'required|string|max:15',
         ];
     }

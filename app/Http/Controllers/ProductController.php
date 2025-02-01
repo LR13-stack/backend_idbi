@@ -38,7 +38,6 @@ class ProductController extends Controller
     public function update(ProductRequest $request, Product $product)
     {
         try {
-            $product->sku = $request->sku;
             $product->name = $request->name;
             $product->description = $request->description;
             $product->unit_price = $request->unit_price;

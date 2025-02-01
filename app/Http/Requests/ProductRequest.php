@@ -22,7 +22,7 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sku' => 'required|string|max:255|unique:products',
+            'sku' => 'required|string|max:255||unique:products,sku,' . $this->product->id,
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'unit_price' => 'required|numeric|min:0',

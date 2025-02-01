@@ -16,4 +16,6 @@ class Product extends Model
         'stock',
         'status',
     ];
+
+    protected $guarded = ['sku'];
 }
