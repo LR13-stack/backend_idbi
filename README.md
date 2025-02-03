@@ -1,66 +1,211 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+ # Proyecto Backend IDBI
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Tecnologías Utilizadas
+- **Laravel v11**
+- **Laravel Sanctum v4**
+- **Laravel Spatie v6**
+- **MySQL**
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Instalación y Ejecución
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sigue estos pasos para instalar y ejecutar el proyecto:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Clonar el repositorio:**  
+   ```sh
+   git clone https://github.com/LR13-stack/backend_idbi.git
+   ```
 
-## Learning Laravel
+2. **Configurar el archivo de entorno:**  
+   Renombrar el archivo `.env.example` a `.env` y establecer las credenciales de conexión a la base de datos.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+3. **Generar la clave de la aplicación y limpiar cachés:**  
+   ```sh
+   php artisan key:generate
+   php artisan config:clear
+   php artisan cache:clear
+   php artisan route:clear
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. **Ejecutar las migraciones con seeders:**  
+   ```sh
+   php artisan migrate --seed
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. **Levantar el servidor:**  
+   ```sh
+   php artisan serve
+   ```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Estructura del Proyecto
 
-### Premium Partners
+```
+app/
+│-- Exports/
+│-- Http/
+│   │-- Controllers/
+│   │-- Requests/
+│   │-- Resources/
+│-- Models/
+│-- Providers/
+│-- Services/
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## Middleware y Autenticación
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+El proyecto utiliza:
+- **Spatie** para la gestión de roles (Administrador y Vendedor).
+- **Sanctum** para la autenticación mediante tokens Bearer.
 
-## Code of Conduct
+### Rutas Principales
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### **Autenticación**
+```php
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+```
 
-## Security Vulnerabilities
+#### **Gestión de Usuarios (Solo Administrador)**
+```php
+Route::middleware(['auth:sanctum', 'role:Administrador'])->group(function () {
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+});
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### **Gestión de Productos, Ventas y Clientes (Administrador y Vendedor)**
+```php
+Route::middleware(['auth:sanctum', 'role:Administrador|Vendedor'])->group(function () {
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::get('/products/{product}', [ProductController::class, 'show']);
+    Route::put('/products/{product}', [ProductController::class, 'update']);
 
-## License
+    Route::get('/sales', [SaleController::class, 'index']);
+    Route::post('/sales', [SaleController::class, 'store']);
+    Route::get('/sales/{sale}', [SaleController::class, 'show']);
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::post('/customers', [CustomerController::class, 'store']);
+    Route::get('/customers/{customer}', [CustomerController::class, 'show']);
+    Route::put('/customers/{customer}', [CustomerController::class, 'update']);
+});
+```
+
+---
+
+## Uso de los Endpoints (Postman o similar)
+
+### **Inicio de Sesión**
+**Ruta:** `POST http://127.0.0.1:8000/api/login`
+
+**Ejemplo de solicitud:**
+```json
+{
+  "email": "admin@test.com",
+  "password": "password"
+}
+```
+
+**Ejemplo de respuesta:**
+```json
+{
+  "message": "Inicio de sesión exitoso.",
+  "data": {
+    "id": 1,
+    "name": "Admin",
+    "last_name": "Admin",
+    "email": "admin@test.com",
+    "created_at": "01-02-2025 23:55:06"
+  },
+  "access_token": "4|HNJfeAfus5qZa3SUFN0PWOnQQmzGN6CJAFQidfH3d5f8c0cc",
+  "token_type": "Bearer"
+}
+```
+
+> **Nota:** Se debe copiar el `access_token` y configurarlo como autenticación Bearer en Postman para acceder a rutas protegidas.
+
+---
+
+## **Generación de Reportes**
+
+### **Reporte de Productos Más Vendidos**
+**Ruta:** `POST /api/reports/best-selling-products`
+
+**Ejemplo de solicitud:**
+```json
+{
+  "start_date": "2025-01-01",
+  "end_date": "2025-02-02",
+  "product_name": "",
+  "customer_name": "",
+  "seller_name": "Vendedor",
+  "format": "json"
+}
+```
+
+**Ejemplo de respuesta:**
+```json
+[
+  {
+    "sku": "P002",
+    "name": "Tablet",
+    "total_quantity": "11",
+    "total_sales": "10890.00"
+  },
+  {
+    "sku": "P001",
+    "name": "Laptop Gamer aaaaa",
+    "total_quantity": "3",
+    "total_sales": "9000.00"
+  }
+]
+```
+
+---
+
+### **Reporte de Ventas Diarias, Semanales y Mensuales**
+**Ruta:** `POST /api/reports/sales`
+
+**Ejemplo de solicitud:**
+```json
+{
+  "start_date": "2025-02-02",
+  "end_date": "2025-02-02",
+  "customer_id": null,
+  "seller_id": 2,
+  "format": "json"
+}
+```
+
+**Ejemplo de respuesta:**
+```json
+[
+  {
+    "code": "V002",
+    "customer_name": "John Doe",
+    "customer_identification": "DNI 12345678",
+    "customer_email": "johnDoe@test.com",
+    "total_products": "12",
+    "total_sales": "15900.00",
+    "sale_date": "02/02/2025 00:03:34"
+  },
+  {
+    "code": "V001",
+    "customer_name": "John Doe",
+    "customer_identification": "DNI 12345678",
+    "customer_email": "johnDoe@test.com",
+    "total_products": "2",
+    "total_sales": "3990.00",
+    "sale_date": "02/02/2025 00:01:05"
+  }
+]
