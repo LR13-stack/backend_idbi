@@ -5,19 +5,27 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function index()
     {
-        return UserResource::collection(User::all());
+        return UserResource::collection($this->userService->all());
     }
 
     public function store(UserRequest $request)
     {
         try {
-            $user = User::create($request->all());
+            $user = $this->userService->create($request->all());
 
             return response()->json([
                 'data' => new UserResource($user),
@@ -38,11 +46,7 @@ class UserController extends Controller
     public function update(UserRequest $request, User $user)
     {
         try {
-            $user->name = $request->name;
-            $user->last_name = $request->last_name;
-            $user->email = $request->email;
-            $user->password = $request->password;
-            $user->save();
+            $user = $this->userService->update($request->all(), $user);
 
             return response()->json([
                 'data' => new UserResource($user),
@@ -58,7 +62,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         try {
-            $user->delete();
+            $this->userService->delete($user);
 
             return response()->json([
                 'message' => 'Usuario eliminado exitosamente.'

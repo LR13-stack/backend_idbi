@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserController;
 
@@ -13,11 +14,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
+Route::post('/reports/best-selling-products', [ReportController::class, 'bestSellingProducts']);
+Route::post('/reports/sales', [ReportController::class, 'sales']);
+
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware(['role:Administrador'])->group(function () {
 
-        // Usuarios
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::get('/users/{user}', [UserController::class, 'show']);
@@ -27,6 +30,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
         Route::delete('/sales/{sale}', [SaleController::class, 'destroy']);
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
+
+        // Route::post('/reports/best-selling-products', [ReportController::class, 'bestSellingProducts']);
     });
 
     Route::middleware(['role:Administrador|Vendedor'])->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
 {
@@ -24,10 +25,17 @@ class UserRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore(optional($this->user)->id),
+            ],
             'password' => 'required|string|min:8',
         ];
     }
+
 
     public function messages(): array
     {
@@ -45,7 +53,7 @@ class UserRequest extends FormRequest
             'email.email' => 'El campo email debe ser un email válido',
             'email.max' => 'El campo email debe tener máximo 255 caracteres',
             'email.unique' => 'El email ya se encuentra registrado',
-            
+
             'password.required' => 'El campo contraseña es requerido',
             'password.string' => 'El campo contraseña debe ser un texto',
             'password.min' => 'El campo contraseña debe tener mínimo 8 caracteres',

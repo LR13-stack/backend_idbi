@@ -10,15 +10,22 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    protected $customerService;
+
+    public function __construct(CustomerService $customerService)
+    {
+        $this->customerService = $customerService;
+    }
+
     public function index()
     {
-        return CustomerResource::collection(Customer::all());
+        return CustomerResource::collection($this->customerService->all());
     }
 
     public function store(CustomerRequest $request)
     {
         try {
-            $customer = Customer::create($request->all());
+            $customer = $this->customerService->create($request->all());
 
             return response()->json([
                 'data' => new CustomerResource($customer),
@@ -26,25 +33,20 @@ class CustomerController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al registrar el cliente.'
+                'message' => 'Error al registrar el cliente.' . $e->getMessage()
             ], 500);
         }
     }
 
     public function show(Customer $customer)
     {
-        return new CustomerResource($customer);
+        return new CustomerResource($this->customerService->find($customer->id));
     }
 
     public function update(CustomerRequest $request, Customer $customer)
     {
         try {
-            $customer->name = $request->name;
-            $customer->document_id = $request->document_id;
-            $customer->number_id = $request->number_id;
-            $customer->email = $request->email;
-            $customer->phone = $request->phone;
-            $customer->save();
+            $customer = $this->customerService->update($request->all(), $customer);
 
             return response()->json([
                 'data' => new CustomerResource($customer),
@@ -60,7 +62,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         try {
-            $customer->delete();
+            $this->customerService->delete($customer);
 
             return response()->json([
                 'message' => 'Cliente eliminado exitosamente.'

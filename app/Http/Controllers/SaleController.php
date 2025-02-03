@@ -6,112 +6,64 @@ use App\Http\Requests\SaleRequest;
 use App\Http\Resources\SaleResource;
 use App\Models\Sale;
 use App\Models\SaleDetail;
+use App\Services\SaleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+    protected $saleService;
+
+    public function __construct(SaleService $saleService)
+    {
+        $this->saleService = $saleService;
+    }
+
     public function index()
     {
-        return SaleResource::collection(Sale::with('details')->get());
+        return SaleResource::collection($this->saleService->all());
     }
 
     public function store(SaleRequest $request)
     {
-        DB::beginTransaction();
-
         try {
-            $totalSale = collect($request->details)->sum('total');
-
-            $sale = Sale::create([
-                'code' => $request->code,
-                'customer_id' => $request->customer_id,
-                'seller_id' => $request->seller_id,
-                'total' => $totalSale,
-            ]);
-
-            $detailsData = array_map(function ($detail) use ($sale) {
-                return [
-                    'sale_id' => $sale->id,
-                    'product_id' => $detail['product_id'],
-                    'quantity' => $detail['quantity'],
-                    'unit_price' => $detail['unit_price'],
-                    'total' => $detail['total'],
-                ];
-            }, $request->details);
-
-            SaleDetail::insert($detailsData);
-
-            DB::commit();
+            $sale = $this->saleService->createSale($request->validated());
 
             return response()->json([
-                'sale' => new SaleResource($sale->load('details')),
+                'sale' => new SaleResource($sale),
                 'message' => 'Venta registrada exitosamente.'
             ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Ocurrió un error al registrar la venta.'], 500);
+            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
     public function show(Sale $sale)
     {
-        return new SaleResource($sale->load('details'));
+        return new SaleResource($this->saleService->find($sale->id));
     }
 
     public function update(SaleRequest $request, Sale $sale)
     {
-        DB::beginTransaction();
-
         try {
-            $totalSale = collect($request->details)->sum('total');
-
-            $sale->update([
-                'code' => $request->code,
-                'customer_id' => $request->customer_id,
-                'seller_id' => $request->seller_id,
-                'total' => $totalSale,
-            ]);
-
-            $sale->details()->delete();
-
-            $detailsData = array_map(function ($detail) use ($sale) {
-                return [
-                    'sale_id' => $sale->id,
-                    'product_id' => $detail['product_id'],
-                    'quantity' => $detail['quantity'],
-                    'unit_price' => $detail['unit_price'],
-                    'total' => $detail['total'],
-                ];
-            }, $request->details);
-
-            SaleDetail::insert($detailsData);
-
-            DB::commit();
+            $sale = $this->saleService->update($request->validated(), $sale);
 
             return response()->json([
-                'sale' => new SaleResource($sale->load('details')),
-                'message' => 'Datos de la venta actualizados exitosamente.'
+                'sale' => new SaleResource($sale),
+                'message' => 'Venta actualizada exitosamente.'
             ], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Ocurrió un error al actualizar los datos de la venta.'], 500);
+            return response()->json(['error' => 'Ocurrió un error al actualizar la venta.'], 500);
         }
     }
 
     public function destroy(Sale $sale)
     {
-        DB::beginTransaction();
-
         try {
-            $sale->details()->delete();
-            $sale->delete();
-
-            DB::commit();
+            $this->saleService->delete($sale);
 
             return response()->json(['message' => 'Venta eliminada exitosamente.'], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json(['error' => 'Ocurrió un error al eliminar la venta.'], 500);
         }
     }
