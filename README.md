@@ -209,3 +209,12 @@ Route::middleware(['auth:sanctum', 'role:Administrador|Vendedor'])->group(functi
     "sale_date": "02/02/2025 00:01:05"
   }
 ]
+```
+
+---
+
+### **Diagrama ERD**
+
+![Diagrama ERD](database.jpg)
+
+---
